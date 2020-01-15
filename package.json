@@ -13,6 +13,7 @@
     "redux"
   ],
   "repository": "git@github.com:grug/react-use-fetch-with-redux.git",
+  "homepage": "https://github.com/grug/react-use-fetch-with-redux#readme",
   "author": "Dave Cooper <dave@davecooper.org>",
   "license": "MIT",
   "scripts": {
