@@ -33,7 +33,7 @@ import { useFetchWithRedux } from 'react-use-fetch-with-redux';
 import { getThingStart } from './actions/ThingActions'; // getThingStart is an action creator.
 import { getThingSelector } from './selectors/ThingSelector'; // getThingSelector is a selector.
 
-const useThing = () => useFetchWithRedux(getThingsStart, getThingSelector);
+const useThing = () => useFetchWithRedux(getThingStart, getThingSelector);
 
 export { useThing };
 ```
