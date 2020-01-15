@@ -1,0 +1,50 @@
+{
+  "name": "react-use-fetch-with-redux",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "keywords": [
+    "hooks",
+    "react",
+    "fetch",
+    "redux"
+  ],
+  "repository": "git@github.com:grug/react-use-fetch-with-redux.git",
+  "author": "Dave Cooper <dave@davecooper.org>",
+  "license": "MIT",
+  "scripts": {
+    "test": "jest",
+    "build": "rimraf dist/ && tsc"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "pretty-quick --staged"
+    }
+  },
+  "dependencies": {
+    "react": "^16.12.0",
+    "react-redux": "^7.1.3"
+  },
+  "np": {
+    "contents": "dist"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^9.4.0",
+    "@testing-library/react-hooks": "^3.2.1",
+    "@types/jest": "^24.9.0",
+    "@types/node": "^13.1.7",
+    "@types/react": "^16.9.17",
+    "@types/react-redux": "^7.1.5",
+    "@types/react-test-renderer": "^16.9.1",
+    "husky": "^4.0.10",
+    "jest": "^24.9.0",
+    "react-test-renderer": "^16.12.0",
+    "rimraf": "^3.0.0",
+    "ts-jest": "^24.3.0",
+    "typescript": "^3.7.4",
+    "pretty-quick": "^2.0.1"
+  }
+}
