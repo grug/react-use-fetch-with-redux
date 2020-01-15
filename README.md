@@ -63,7 +63,7 @@ const SomeComponent = () => {
   const thing = useThing<State, Thing>();
   const Loading = () => <span>Loading...</span>;
 
-  return thing ? <Loading /> : <div>My thing: thing</div>;
+  return thing ? <Loading /> : <div>My thing: {thing}</div>;
 };
 ```
 
