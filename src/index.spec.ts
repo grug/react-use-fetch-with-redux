@@ -23,51 +23,29 @@ describe('useFetchWithRedux hook', () => {
     mockUseDispatch.mockImplementation(() => mockDispatch);
   });
 
-  it('Calls dispatch when value does not exist in state', () => {
+  it('Returns null and calls dispatch when selector returns null', () => {
     mockUseSelector.mockImplementation(callback =>
-      callback(testSelector(undefined)),
+      callback(testSelector(null)),
     );
 
     const { result } = renderHook(() =>
-      useFetchWithRedux(testAction, testSelector, false),
+      useFetchWithRedux(testAction, testSelector),
     );
 
-    expect(result.current).toEqual(undefined);
+    expect(result.current).toEqual(null);
     expect(mockDispatch).toHaveBeenCalled();
   });
 
-  it('Returns value from state when it exists and does not dispatch action', () => {
+  it('Returns value from state and does not call dispatch when selector returns data', () => {
     mockUseSelector.mockImplementation(callback =>
       callback(testSelector<number>(7)),
     );
 
     const { result } = renderHook(() =>
-      useFetchWithRedux(testAction, testSelector, false),
+      useFetchWithRedux(testAction, testSelector),
     );
 
     expect(result.current).toEqual(7);
     expect(mockDispatch).not.toHaveBeenCalled();
-  });
-
-  it('Does not call dispatch if emptyArrayIsFalse = false and selected data is an empty array', () => {
-    mockUseSelector.mockImplementation(callback => callback(testSelector([])));
-
-    const { result } = renderHook(() =>
-      useFetchWithRedux(testAction, testSelector, false),
-    );
-
-    expect(result.current).toEqual([]);
-    expect(mockDispatch).not.toHaveBeenCalled();
-  });
-
-  it('Does call dispatch if emptyArrayIsFalse = true and selected data is an empty array', () => {
-    mockUseSelector.mockImplementation(callback => callback(testSelector([])));
-
-    const { result } = renderHook(() =>
-      useFetchWithRedux(testAction, testSelector, true),
-    );
-
-    expect(result.current).toEqual([]);
-    expect(mockDispatch).toHaveBeenCalled();
   });
 });

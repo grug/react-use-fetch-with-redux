@@ -5,16 +5,12 @@ import { Action } from 'redux';
 function useFetchWithRedux<State, Selected>(
   getDataStart: () => Action,
   selector: (state: State) => Selected,
-  emptyArrayIsFalse: boolean = false,
 ) {
   const dispatch = useDispatch();
   const selected = useSelector(selector);
 
   useEffect(() => {
-    if (
-      !selected ||
-      (emptyArrayIsFalse && Array.isArray(selected) && selected.length === 0)
-    ) {
+    if (selected === null) {
       dispatch(getDataStart());
     }
   }, [dispatch]);

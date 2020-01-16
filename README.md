@@ -22,6 +22,24 @@ With Yarn:
 yarn add react-use-fetch-with-redux
 ```
 
+## API
+
+`useFetchWithRedux` is a function that takes two parameters:
+
+- `getDataStart`: This is a function that returns a Redux action (i.e. an action creator) that must kickstart your data fetching process (i.e. the handler for this action could make an API call and store the result of that in your Redux store).
+- `selector`: This is a function that takes your Redux state and returns the slice of state you are returning from your hook. If the selector returns `null`, then your `getDataStart` action will be dispatched.
+
+## How it works
+
+- You provide an action creator (`getDataStart`)
+- You provide a selector (`selector`)
+
+If your selector returns data, then your action creator is not called and the hook will simply return that data from state.
+
+If your selector returns `null`, then the action your action creator returns will be dispatched. It is up to you to provide the logic in your selectors to know when to return null.
+
+This is an explicit design decision that was made when designing this hook to avoid forcing people to shape their state around this hook (i.e. we could have forced people to have a flag on each slice of state to indicate if something had loaded from an API or not, but that was deemed too intrusive).
+
 ## Usage
 
 You can create your own hook that uses `useFetchWithRedux` to grab data (if needed) and pass it from the Redux store to your components:
@@ -45,7 +63,8 @@ For completeness, this is what `getThingSelector` could look like:
 ```typescript
 import { State } from './types'; // This is the Redux Store type
 
-const getThingSelector = (state: State) => state.thing;
+const getThingSelector = (state: State) =>
+  state.thing === [] ? null : state.thing;
 
 export { getThingSelector };
 ```
@@ -74,3 +93,12 @@ The project uses Jest for testing, along with [react-hooks-testing-library](http
 ## Contributing
 
 I welcome all contributions to this project. Please feel free to raise any issues or pull requests as you see fit :)
+
+## Future features
+
+There are many things that could improve this hook, so keep your eyes peeled or feel free to contribute :)
+
+Possible features include:
+
+- More sophisticated cachine strategies
+- Ability to specify caching strategies
