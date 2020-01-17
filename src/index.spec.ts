@@ -8,8 +8,8 @@ jest.mock('react-redux', () => ({
   useDispatch: jest.fn(),
 }));
 
-const mockUseSelector = (useSelector as unknown) as jest.Mock;
-const mockUseDispatch = (useDispatch as unknown) as jest.Mock;
+const mockUseSelector = useSelector as jest.Mock;
+const mockUseDispatch = useDispatch as jest.Mock;
 const mockDispatch = jest.fn();
 
 const testAction = (): Action => ({
