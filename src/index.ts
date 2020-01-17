@@ -36,7 +36,7 @@ function useFetchWithRedux<State, Selected>(
           ...cacheTimeouts,
           [cacheIndex]: {
             cacheInvalidationTime,
-            cacheSet: new Date().getTime(),
+            cacheSet: Date.now(),
           },
         });
       }
@@ -57,7 +57,7 @@ function useFetchWithRedux<State, Selected>(
       ...cacheTimeouts,
       [cacheIndex]: {
         cacheInvalidationTime,
-        cacheSet: new Date().getTime(),
+        cacheSet: Date.now(),
       },
     });
   }
