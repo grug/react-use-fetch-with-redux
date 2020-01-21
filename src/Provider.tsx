@@ -1,21 +1,36 @@
-import React, { useState, createContext } from 'react';
+import React, {
+  useState,
+  createContext,
+  Dispatch,
+  SetStateAction,
+} from 'react';
+import { CacheTimeouts } from './types';
 
 type Props = {
   children: JSX.Element;
   timeTillCacheInvalidate?: number;
 };
 
-const ReactUseFetchWithReduxContext = createContext([{}, () => {}]);
+type IContextProps = {
+  cacheTimeouts: {};
+  setCacheTimeouts: Dispatch<SetStateAction<CacheTimeouts>>;
+  timeTillCacheInvalidateGlobal?: number;
+};
+
+const ReactUseFetchWithReduxContext = createContext({
+  cacheTimeouts: {},
+  setCacheTimeouts: () => {},
+} as IContextProps);
 
 const ReactUseFetchWithReduxProvider = ({
   children,
   timeTillCacheInvalidate,
 }: Props) => {
-  const [cacheTimeouts, setCacheTimeouts] = useState({});
+  const [cacheTimeouts, setCacheTimeouts] = useState<CacheTimeouts>({});
 
   const value = timeTillCacheInvalidate
-    ? [cacheTimeouts, setCacheTimeouts, timeTillCacheInvalidate]
-    : [cacheTimeouts, setCacheTimeouts];
+    ? { cacheTimeouts, setCacheTimeouts, timeTillCacheInvalidate }
+    : { cacheTimeouts, setCacheTimeouts };
 
   return (
     <ReactUseFetchWithReduxContext.Provider value={value}>

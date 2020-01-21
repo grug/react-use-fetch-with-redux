@@ -86,6 +86,50 @@ const SomeComponent = () => {
 };
 ```
 
+### Additional features
+
+#### Caching
+
+There is the option to invalidate the cache, meaning next time the hook is called it will fetch the data again.
+
+By setting a timeTillCacheInvalidate time in ms, as follows:
+
+**In `SomeHighLevelComponent.tsx`**
+
+```tsx
+import React from 'react';
+import { useThing } from './useThing';
+import { State, Thing } from './types';
+
+const SomeComponent = () => {
+  <Provider store={store}>
+    {' '}
+    // Redux provider
+    <ReactUseFetchWithReduxProvider timeTillCacheInvalidate={1800000}>
+      <App />
+    </ReactUseFetchWithReduxProvider>
+  </Provider>;
+};
+```
+
+will result in the cache invalidating after 30 minuets.
+There is also the option to override this for each hook, with an optional third parameter like:
+
+**In `useThing.ts`**
+
+```typescript
+import { useFetchWithRedux } from 'react-use-fetch-with-redux';
+import { getThingStart } from './actions/ThingActions'; // getThingStart is an action creator.
+import { getThingSelector } from './selectors/ThingSelector'; // getThingSelector is a selector.
+
+const useThing = () =>
+  useFetchWithRedux(getThingStart, getThingSelector, {
+    timeTillCacheInvalidate: 1800000,
+  });
+
+export { useThing };
+```
+
 ## Testing
 
 The project uses Jest for testing, along with [react-hooks-testing-library](https://github.com/testing-library/react-hooks-testing-library) for rendering hooks without explicitly creating harness components.
