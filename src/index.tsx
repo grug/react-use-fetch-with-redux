@@ -7,10 +7,7 @@ import {
   ReactUseFetchWithReduxProvider,
 } from './Provider';
 import { hasCacheTimedOut } from './utils/hasCacheTimedOut';
-
-type Options = {
-  timeTillCacheInvalidate: number;
-};
+import { Options } from './types';
 
 function useFetchWithRedux<State, Selected>(
   getDataStart: () => Action,
@@ -28,17 +25,33 @@ function useFetchWithRedux<State, Selected>(
   const cacheIndex = getDataStart().type;
   const isCacheSet = Object.keys(cacheTimeouts).includes(cacheIndex);
 
-  const cacheInvalidationTime =
+  const timeTillCacheInvalidate =
     options?.timeTillCacheInvalidate ?? timeTillCacheInvalidateGlobal ?? null;
 
   useEffect(() => {
+    if (
+      isCacheSet &&
+      options?.timeTillCacheInvalidate &&
+      !hasCacheTimedOut(cacheTimeouts, cacheIndex)
+    ) {
+      setCacheTimeouts({
+        ...cacheTimeouts,
+        [cacheIndex]: {
+          timeTillCacheInvalidate,
+          cacheSet: Date.now(),
+        },
+      });
+    }
+
     if (!isCacheSet) {
-      if (!selected) dispatch(getDataStart());
-      if (cacheInvalidationTime) {
+      if (!selected) {
+        dispatch(getDataStart());
+      }
+      if (timeTillCacheInvalidate) {
         setCacheTimeouts({
           ...cacheTimeouts,
           [cacheIndex]: {
-            cacheInvalidationTime,
+            timeTillCacheInvalidate,
             cacheSet: Date.now(),
           },
         });
@@ -51,19 +64,19 @@ function useFetchWithRedux<State, Selected>(
     getDataStart,
     isCacheSet,
     setCacheTimeouts,
-    cacheInvalidationTime,
+    timeTillCacheInvalidate,
   ]);
 
   if (
     isCacheSet &&
-    cacheInvalidationTime &&
+    timeTillCacheInvalidate &&
     hasCacheTimedOut(cacheTimeouts, cacheIndex)
   ) {
     dispatch(getDataStart());
     setCacheTimeouts({
       ...cacheTimeouts,
       [cacheIndex]: {
-        cacheInvalidationTime,
+        timeTillCacheInvalidate,
         cacheSet: Date.now(),
       },
     });

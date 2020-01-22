@@ -109,7 +109,7 @@ describe('useFetchWithRedux hook', () => {
           expect(mockDispatch).not.toHaveBeenCalled();
         });
 
-        it('Sets cache with the action type, time and cacheInvalidationTime', () => {
+        it('Sets cache with the action type, time and timeTillCacheInvalidate', () => {
           mockUseSelector.mockImplementation(callback =>
             callback(testSelector(testSelector<number>(7))),
           );
@@ -123,7 +123,7 @@ describe('useFetchWithRedux hook', () => {
           expect(setCacheTimeouts).toHaveBeenCalledTimes(1);
           expect(setCacheTimeouts).toHaveBeenCalledWith({
             TEST: {
-              cacheInvalidationTime: 1234,
+              timeTillCacheInvalidate: 1234,
               cacheSet: Date.now(),
             },
           });
@@ -168,7 +168,7 @@ describe('useFetchWithRedux hook', () => {
           expect(mockDispatch).not.toHaveBeenCalled();
         });
 
-        it('Sets cache with the action type, time and cacheInvalidationTime from context', () => {
+        it('Sets cache with the action type, time and timeTillCacheInvalidate from context', () => {
           mockUseSelector.mockImplementation(callback =>
             callback(testSelector(testSelector<number>(7))),
           );
@@ -178,7 +178,7 @@ describe('useFetchWithRedux hook', () => {
           expect(setCacheTimeouts).toHaveBeenCalledTimes(1);
           expect(setCacheTimeouts).toHaveBeenCalledWith({
             TEST: {
-              cacheInvalidationTime: 1111,
+              timeTillCacheInvalidate: 1111,
               cacheSet: Date.now(),
             },
           });
@@ -215,7 +215,7 @@ describe('useFetchWithRedux hook', () => {
           expect(mockDispatch).not.toHaveBeenCalled();
         });
 
-        it('Sets cache with the action type, time and cacheInvalidationTime from the hook input', () => {
+        it('Sets cache with the action type, time and timeTillCacheInvalidate from the hook input', () => {
           mockUseSelector.mockImplementation(callback =>
             callback(testSelector(testSelector<number>(7))),
           );
@@ -229,7 +229,7 @@ describe('useFetchWithRedux hook', () => {
           expect(setCacheTimeouts).toHaveBeenCalledTimes(1);
           expect(setCacheTimeouts).toHaveBeenCalledWith({
             TEST: {
-              cacheInvalidationTime: 1234,
+              timeTillCacheInvalidate: 1234,
               cacheSet: Date.now(),
             },
           });
@@ -238,12 +238,12 @@ describe('useFetchWithRedux hook', () => {
     });
   });
 
-  describe('When cache has been set', () => {
+  describe('When timeTillCacheInvalidate has been set by the provider', () => {
     beforeEach(() => {
       mockUseContext.mockImplementation(() => ({
         cacheTimeouts: {
           TEST: {
-            cacheInvalidationTime: 1234,
+            timeTillCacheInvalidate: 1234,
             cacheSet: Date.now(),
           },
         },
@@ -261,22 +261,52 @@ describe('useFetchWithRedux hook', () => {
         mockHasCacheTimedOut.mockImplementation(() => false);
       });
 
-      it('Returns the value from useSelector', () => {
-        const { result } = renderHook(() =>
-          useFetchWithRedux(testAction, testSelector),
-        );
+      describe('With no timeTillCacheInvalidate included in the hooks options', () => {
+        it('Returns the value from useSelector', () => {
+          const { result } = renderHook(() =>
+            useFetchWithRedux(testAction, testSelector),
+          );
 
-        expect(result.current).toEqual(4444);
+          expect(result.current).toEqual(4444);
+        });
+
+        it('Does not dispatch an action', () => {
+          renderHook(() => useFetchWithRedux(testAction, testSelector));
+          expect(mockDispatch).not.toHaveBeenCalled();
+        });
+
+        it('Should not make a call to setCacheTimeouts to update the cache', () => {
+          renderHook(() => useFetchWithRedux(testAction, testSelector));
+          expect(setCacheTimeouts).not.toHaveBeenCalled();
+        });
       });
 
-      it('Does not dispatch an action', () => {
-        renderHook(() => useFetchWithRedux(testAction, testSelector));
-        expect(mockDispatch).toHaveBeenCalledTimes(0);
-      });
+      describe('When timeTillCacheInvalidate is also included in the hooks options', () => {
+        it('Should make a call to setCacheTimeouts to update the cache to the value provided by the options value', () => {
+          renderHook(() =>
+            useFetchWithRedux(testAction, testSelector, {
+              timeTillCacheInvalidate: 6464,
+            }),
+          );
 
-      it('Should not make a call to setCacheTimeouts to update the cache', () => {
-        renderHook(() => useFetchWithRedux(testAction, testSelector));
-        expect(setCacheTimeouts).toHaveBeenCalledTimes(0);
+          expect(setCacheTimeouts).toHaveBeenCalledTimes(1);
+          expect(setCacheTimeouts).toHaveBeenCalledWith({
+            TEST: {
+              timeTillCacheInvalidate: 6464,
+              cacheSet: Date.now(),
+            },
+          });
+        });
+
+        it('Should not dispatch an action', () => {
+          renderHook(() =>
+            useFetchWithRedux(testAction, testSelector, {
+              timeTillCacheInvalidate: 6464,
+            }),
+          );
+
+          expect(mockDispatch).not.toHaveBeenCalled();
+        });
       });
     });
 
@@ -285,28 +315,73 @@ describe('useFetchWithRedux hook', () => {
         mockHasCacheTimedOut.mockImplementation(() => true);
       });
 
-      it('Returns the value from useSelector', () => {
-        const { result } = renderHook(() =>
-          useFetchWithRedux(testAction, testSelector),
-        );
+      describe('With no timeTillCacheInvalidate included in the hooks options', () => {
+        it('Returns the value from useSelector', () => {
+          const { result } = renderHook(() =>
+            useFetchWithRedux(testAction, testSelector),
+          );
 
-        expect(result.current).toEqual(4444);
+          expect(result.current).toEqual(4444);
+        });
+
+        it('Dispatches an action', () => {
+          renderHook(() => useFetchWithRedux(testAction, testSelector));
+          expect(mockDispatch).toHaveBeenCalledTimes(1);
+          expect(mockDispatch).toHaveBeenCalledWith(testAction());
+        });
+
+        it('Should make a call to setCacheTimeouts to update the cache', () => {
+          renderHook(() => useFetchWithRedux(testAction, testSelector));
+          expect(mockDispatch).toHaveBeenCalledTimes(1);
+          expect(setCacheTimeouts).toHaveBeenCalledWith({
+            TEST: {
+              timeTillCacheInvalidate: 2222,
+              cacheSet: Date.now(),
+            },
+          });
+        });
       });
 
-      it('Should dispatch the action', () => {
-        renderHook(() => useFetchWithRedux(testAction, testSelector));
-        expect(mockDispatch).toHaveBeenCalledTimes(1);
-        expect(mockDispatch).toHaveBeenCalledWith(testAction());
-      });
+      describe('When timeTillCacheInvalidate is also included in the hooks options', () => {
+        it('Returns the value from useSelector', () => {
+          const { result } = renderHook(() =>
+            useFetchWithRedux(testAction, testSelector),
+          );
 
-      it('Should make a call to setCacheTimeouts to update the cache', () => {
-        renderHook(() => useFetchWithRedux(testAction, testSelector));
-        expect(setCacheTimeouts).toHaveBeenCalledTimes(1);
-        expect(setCacheTimeouts).toHaveBeenCalledWith({
-          TEST: {
-            cacheInvalidationTime: 2222,
-            cacheSet: Date.now(),
-          },
+          expect(result.current).toEqual(4444);
+        });
+
+        it('Should make a call to setCacheTimeouts to update the cache to the value provided by the options value', () => {
+          renderHook(() =>
+            useFetchWithRedux(testAction, testSelector, {
+              timeTillCacheInvalidate: 6464,
+            }),
+          );
+
+          expect(setCacheTimeouts).toHaveBeenCalledTimes(1);
+          expect(setCacheTimeouts).toHaveBeenCalledWith({
+            TEST: {
+              timeTillCacheInvalidate: 6464,
+              cacheSet: Date.now(),
+            },
+          });
+        });
+
+        it('Should dispatch the action', () => {
+          renderHook(() => useFetchWithRedux(testAction, testSelector));
+          expect(mockDispatch).toHaveBeenCalledTimes(1);
+          expect(mockDispatch).toHaveBeenCalledWith(testAction());
+        });
+
+        it('Should make a call to setCacheTimeouts to update the cache', () => {
+          renderHook(() => useFetchWithRedux(testAction, testSelector));
+          expect(setCacheTimeouts).toHaveBeenCalledTimes(1);
+          expect(setCacheTimeouts).toHaveBeenCalledWith({
+            TEST: {
+              timeTillCacheInvalidate: 2222,
+              cacheSet: Date.now(),
+            },
+          });
         });
       });
     });

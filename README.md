@@ -86,7 +86,7 @@ const SomeComponent = () => {
 };
 ```
 
-### Additional features
+## Additional features
 
 #### Caching
 
@@ -98,13 +98,12 @@ By setting a timeTillCacheInvalidate time in ms, as follows:
 
 ```tsx
 import React from 'react';
-import { useThing } from './useThing';
+import { Provider } from 'react-redux';
+import { store } from './redux/store';
 import { State, Thing } from './types';
 
 const SomeComponent = () => {
   <Provider store={store}>
-    {' '}
-    // Redux provider
     <ReactUseFetchWithReduxProvider timeTillCacheInvalidate={1800000}>
       <App />
     </ReactUseFetchWithReduxProvider>
@@ -112,7 +111,7 @@ const SomeComponent = () => {
 };
 ```
 
-will result in the cache invalidating after 30 minuets.
+Will result in the cache invalidating after 30 minutes.
 There is also the option to override this for each hook, with an optional third parameter like:
 
 **In `useThing.ts`**
