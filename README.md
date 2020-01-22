@@ -88,7 +88,7 @@ const SomeComponent = () => {
 
 ## Additional features
 
-#### Caching
+### Caching
 
 There is the option to invalidate the cache, meaning next time the hook is called it will fetch the data again.
 
