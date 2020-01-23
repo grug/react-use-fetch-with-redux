@@ -112,7 +112,7 @@ const SomeComponent = () => {
 ```
 
 Will result in the cache invalidating after 30 minutes.
-There is also the option to override this for each hook, with an optional third parameter like:
+There is also the option to set the cache invalidation time per hook, with an optional third parameter like:
 
 **In `useThing.ts`**
 
@@ -128,6 +128,9 @@ const useThing = () =>
 
 export { useThing };
 ```
+
+This will any value set by the provider set.
+You can also not set any value at the provider level, and handle all invalidation times in the hooks, but you will still need the provider, just with no value.
 
 ## Testing
 
