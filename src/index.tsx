@@ -22,15 +22,13 @@ function useFetchWithRedux<State, Selected>(
     timeTillCacheInvalidate: timeTillCacheInvalidateGlobal,
   } = useContext(ReactUseFetchWithReduxContext);
 
-  const cacheIndex = getDataStart().type;
-  const isCacheSet = Object.keys(cacheTimeouts).includes(cacheIndex);
-
-  const timeTillCacheInvalidate =
-    options?.timeTillCacheInvalidate ?? timeTillCacheInvalidateGlobal ?? null;
-
-  const remainingCacheTime = getRemainingCacheTime(cacheTimeouts, cacheIndex);
-
   useEffect(() => {
+    const cacheIndex = getDataStart().type;
+    const isCacheSet = Object.keys(cacheTimeouts).includes(cacheIndex);
+    const remainingCacheTime = getRemainingCacheTime(cacheTimeouts, cacheIndex);
+    const timeTillCacheInvalidate =
+      options?.timeTillCacheInvalidate ?? timeTillCacheInvalidateGlobal ?? null;
+
     if (!isCacheSet && !selected) {
       dispatch(getDataStart());
     }
@@ -49,30 +47,25 @@ function useFetchWithRedux<State, Selected>(
         },
       });
     }
+
+    if (isCacheSet && remainingCacheTime === 0) {
+      dispatch(getDataStart());
+      setCacheTimeouts({
+        ...cacheTimeouts,
+        [cacheIndex]: {
+          timeTillCacheInvalidate,
+          cacheSet: Date.now(),
+        },
+      });
+    }
   }, [
-    cacheIndex,
     cacheTimeouts,
     dispatch,
     getDataStart,
-    isCacheSet,
     options,
-    remainingCacheTime,
     selected,
     setCacheTimeouts,
-    timeTillCacheInvalidate,
-    timeTillCacheInvalidateGlobal,
   ]);
-
-  if (isCacheSet && remainingCacheTime === 0) {
-    dispatch(getDataStart());
-    setCacheTimeouts({
-      ...cacheTimeouts,
-      [cacheIndex]: {
-        timeTillCacheInvalidate,
-        cacheSet: Date.now(),
-      },
-    });
-  }
 
   return selected;
 }

@@ -238,7 +238,7 @@ describe('useFetchWithRedux hook', () => {
     });
   });
 
-  describe('When timeTillCacheInvalidate has been set by the provider', () => {
+  describe('When cache has already been set', () => {
     beforeEach(() => {
       mockUseContext.mockImplementation(() => ({
         cacheTimeouts: {
@@ -281,8 +281,8 @@ describe('useFetchWithRedux hook', () => {
         });
       });
 
-      describe('When timeTillCacheInvalidate is also included in the hooks options', () => {
-        describe('Is larger than the remaining time till the cache is invalid', () => {
+      describe('When timeTillCacheInvalidate is included in the hooks options', () => {
+        describe('and is less than than the remaining time till the cache is invalid', () => {
           it('Should make a call to setCacheTimeouts to update the cache to the value provided by the options value', () => {
             renderHook(() =>
               useFetchWithRedux(testAction, testSelector, {
@@ -298,9 +298,19 @@ describe('useFetchWithRedux hook', () => {
               },
             });
           });
+
+          it('Should not dispatch an action', () => {
+            renderHook(() =>
+              useFetchWithRedux(testAction, testSelector, {
+                timeTillCacheInvalidate: 6464,
+              }),
+            );
+
+            expect(mockDispatch).not.toHaveBeenCalled();
+          });
         });
 
-        describe('Is less than the remaining time till the cache is invalid', () => {
+        describe('and is greater than than the remaining time till the cache is invalid', () => {
           beforeEach(() => {
             mockGetRemainingCacheTime.mockImplementation(() => 123);
           });
