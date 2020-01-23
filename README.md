@@ -100,7 +100,6 @@ By setting a timeTillCacheInvalidate time in ms, as follows:
 import React from 'react';
 import { Provider } from 'react-redux';
 import { store } from './redux/store';
-import { State, Thing } from './types';
 
 const SomeComponent = () => {
   <Provider store={store}>
