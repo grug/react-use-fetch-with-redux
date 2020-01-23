@@ -14,13 +14,13 @@ type Props = {
 type ContextProps = {
   cacheTimeouts: CacheTimeouts;
   setCacheTimeouts: Dispatch<SetStateAction<CacheTimeouts>>;
-  timeTillCacheInvalidateGlobal?: number;
+  timeTillCacheInvalidate?: number;
 };
 
-const ReactUseFetchWithReduxContext = createContext({
+const ReactUseFetchWithReduxContext = createContext<ContextProps>({
   cacheTimeouts: {},
   setCacheTimeouts: () => {},
-} as ContextProps);
+});
 
 const ReactUseFetchWithReduxProvider = ({
   children,
@@ -28,12 +28,12 @@ const ReactUseFetchWithReduxProvider = ({
 }: Props) => {
   const [cacheTimeouts, setCacheTimeouts] = useState<CacheTimeouts>({});
 
-  const value = timeTillCacheInvalidate
+  const contextValue = timeTillCacheInvalidate
     ? { cacheTimeouts, setCacheTimeouts, timeTillCacheInvalidate }
     : { cacheTimeouts, setCacheTimeouts };
 
   return (
-    <ReactUseFetchWithReduxContext.Provider value={value}>
+    <ReactUseFetchWithReduxContext.Provider value={contextValue}>
       {children}
     </ReactUseFetchWithReduxContext.Provider>
   );

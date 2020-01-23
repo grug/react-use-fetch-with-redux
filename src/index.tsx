@@ -6,7 +6,7 @@ import {
   ReactUseFetchWithReduxContext,
   ReactUseFetchWithReduxProvider,
 } from './Provider';
-import { hasCacheTimedOut } from './utils/hasCacheTimedOut';
+import { getRemainingCacheTime } from './utils';
 import { Options } from './types';
 
 function useFetchWithRedux<State, Selected>(
@@ -19,7 +19,7 @@ function useFetchWithRedux<State, Selected>(
   const {
     cacheTimeouts,
     setCacheTimeouts,
-    timeTillCacheInvalidateGlobal,
+    timeTillCacheInvalidate: timeTillCacheInvalidateGlobal,
   } = useContext(ReactUseFetchWithReduxContext);
 
   const cacheIndex = getDataStart().type;
@@ -28,12 +28,19 @@ function useFetchWithRedux<State, Selected>(
   const timeTillCacheInvalidate =
     options?.timeTillCacheInvalidate ?? timeTillCacheInvalidateGlobal ?? null;
 
+  const remainingCacheTime = getRemainingCacheTime(cacheTimeouts, cacheIndex);
+
   useEffect(() => {
-    if (
+    if (!isCacheSet && !selected) {
+      dispatch(getDataStart());
+    }
+
+    const cacheShouldBeOverwritten =
       isCacheSet &&
       options?.timeTillCacheInvalidate &&
-      !hasCacheTimedOut(cacheTimeouts, cacheIndex)
-    ) {
+      options?.timeTillCacheInvalidate < remainingCacheTime;
+
+    if ((timeTillCacheInvalidate && !isCacheSet) || cacheShouldBeOverwritten) {
       setCacheTimeouts({
         ...cacheTimeouts,
         [cacheIndex]: {
@@ -42,36 +49,21 @@ function useFetchWithRedux<State, Selected>(
         },
       });
     }
-
-    if (!isCacheSet) {
-      if (!selected) {
-        dispatch(getDataStart());
-      }
-      if (timeTillCacheInvalidate) {
-        setCacheTimeouts({
-          ...cacheTimeouts,
-          [cacheIndex]: {
-            timeTillCacheInvalidate,
-            cacheSet: Date.now(),
-          },
-        });
-      }
-    }
   }, [
     cacheIndex,
     cacheTimeouts,
     dispatch,
     getDataStart,
     isCacheSet,
+    options,
+    remainingCacheTime,
+    selected,
     setCacheTimeouts,
     timeTillCacheInvalidate,
+    timeTillCacheInvalidateGlobal,
   ]);
 
-  if (
-    isCacheSet &&
-    timeTillCacheInvalidate &&
-    hasCacheTimedOut(cacheTimeouts, cacheIndex)
-  ) {
+  if (isCacheSet && remainingCacheTime === 0) {
     dispatch(getDataStart());
     setCacheTimeouts({
       ...cacheTimeouts,

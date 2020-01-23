@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Action } from 'redux';
 import { useFetchWithRedux } from './';
 import { useContext } from 'react';
-import { hasCacheTimedOut } from './utils/hasCacheTimedOut';
+import { getRemainingCacheTime } from './utils';
 
 jest.mock('react-redux', () => ({
   useSelector: jest.fn(),
@@ -15,14 +15,14 @@ jest.mock('react', () => ({
   useContext: jest.fn(),
 }));
 
-jest.mock('./utils/hasCacheTimedOut', () => ({
-  hasCacheTimedOut: jest.fn(),
+jest.mock('./utils', () => ({
+  getRemainingCacheTime: jest.fn(),
 }));
 
-const mockUseSelector = (useSelector as unknown) as jest.Mock;
-const mockUseDispatch = (useDispatch as unknown) as jest.Mock;
+const mockUseSelector = useSelector as jest.Mock;
+const mockUseDispatch = useDispatch as jest.Mock;
 const mockUseContext = useContext as jest.Mock;
-const mockHasCacheTimedOut = hasCacheTimedOut as jest.Mock;
+const mockGetRemainingCacheTime = getRemainingCacheTime as jest.Mock;
 
 const mockDispatch = jest.fn();
 const setCacheTimeouts = jest.fn();
@@ -42,7 +42,7 @@ describe('useFetchWithRedux hook', () => {
   });
 
   describe('When no cache has been set', () => {
-    describe('With no value provided for timeTillCacheInvalidateGlobal', () => {
+    describe('With no value provided for timeTillCacheInvalidate', () => {
       beforeEach(() => {
         mockUseContext.mockImplementation(() => ({
           cacheTimeouts: {},
@@ -131,12 +131,12 @@ describe('useFetchWithRedux hook', () => {
       });
     });
 
-    describe('With a value provided for timeTillCacheInvalidateGlobal', () => {
+    describe('With a value provided for timeTillCacheInvalidate globally from context provider', () => {
       beforeEach(() => {
         mockUseContext.mockImplementation(() => ({
           cacheTimeouts: {},
           setCacheTimeouts,
-          timeTillCacheInvalidateGlobal: 1111,
+          timeTillCacheInvalidate: 1111,
         }));
       });
 
@@ -248,7 +248,7 @@ describe('useFetchWithRedux hook', () => {
           },
         },
         setCacheTimeouts,
-        timeTillCacheInvalidateGlobal: 2222,
+        timeTillCacheInvalidate: 2222,
       }));
 
       mockUseSelector.mockImplementation(callback =>
@@ -258,7 +258,7 @@ describe('useFetchWithRedux hook', () => {
 
     describe('Before it has expired', () => {
       beforeEach(() => {
-        mockHasCacheTimedOut.mockImplementation(() => false);
+        mockGetRemainingCacheTime.mockImplementation(() => 999999);
       });
 
       describe('With no timeTillCacheInvalidate included in the hooks options', () => {
@@ -282,37 +282,55 @@ describe('useFetchWithRedux hook', () => {
       });
 
       describe('When timeTillCacheInvalidate is also included in the hooks options', () => {
-        it('Should make a call to setCacheTimeouts to update the cache to the value provided by the options value', () => {
-          renderHook(() =>
-            useFetchWithRedux(testAction, testSelector, {
-              timeTillCacheInvalidate: 6464,
-            }),
-          );
+        describe('Is larger than the remaining time till the cache is invalid', () => {
+          it('Should make a call to setCacheTimeouts to update the cache to the value provided by the options value', () => {
+            renderHook(() =>
+              useFetchWithRedux(testAction, testSelector, {
+                timeTillCacheInvalidate: 6464,
+              }),
+            );
 
-          expect(setCacheTimeouts).toHaveBeenCalledTimes(1);
-          expect(setCacheTimeouts).toHaveBeenCalledWith({
-            TEST: {
-              timeTillCacheInvalidate: 6464,
-              cacheSet: Date.now(),
-            },
+            expect(setCacheTimeouts).toHaveBeenCalledTimes(1);
+            expect(setCacheTimeouts).toHaveBeenCalledWith({
+              TEST: {
+                timeTillCacheInvalidate: 6464,
+                cacheSet: Date.now(),
+              },
+            });
           });
         });
 
-        it('Should not dispatch an action', () => {
-          renderHook(() =>
-            useFetchWithRedux(testAction, testSelector, {
-              timeTillCacheInvalidate: 6464,
-            }),
-          );
+        describe('Is less than the remaining time till the cache is invalid', () => {
+          beforeEach(() => {
+            mockGetRemainingCacheTime.mockImplementation(() => 123);
+          });
 
-          expect(mockDispatch).not.toHaveBeenCalled();
+          it('Should not make a call to setCacheTimeouts', () => {
+            renderHook(() =>
+              useFetchWithRedux(testAction, testSelector, {
+                timeTillCacheInvalidate: 6464,
+              }),
+            );
+
+            expect(setCacheTimeouts).not.toHaveBeenCalled();
+          });
+
+          it('Should not dispatch an action', () => {
+            renderHook(() =>
+              useFetchWithRedux(testAction, testSelector, {
+                timeTillCacheInvalidate: 6464,
+              }),
+            );
+
+            expect(mockDispatch).not.toHaveBeenCalled();
+          });
         });
       });
     });
 
     describe('After it has expired', () => {
       beforeEach(() => {
-        mockHasCacheTimedOut.mockImplementation(() => true);
+        mockGetRemainingCacheTime.mockImplementation(() => 0);
       });
 
       describe('With no timeTillCacheInvalidate included in the hooks options', () => {
@@ -367,7 +385,7 @@ describe('useFetchWithRedux hook', () => {
           });
         });
 
-        it('Should dispatch the action', () => {
+        it('Dispatches the action', () => {
           renderHook(() => useFetchWithRedux(testAction, testSelector));
           expect(mockDispatch).toHaveBeenCalledTimes(1);
           expect(mockDispatch).toHaveBeenCalledWith(testAction());
