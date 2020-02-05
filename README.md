@@ -24,21 +24,27 @@ yarn add react-use-fetch-with-redux
 
 ## API
 
-`useFetchWithRedux` is a function that takes two parameters:
+`useFetchWithRedux` is a function that takes three parameters:
 
 - `getDataStart`: This is a function that returns a Redux action (i.e. an action creator) that must kickstart your data fetching process (i.e. the handler for this action could make an API call and store the result of that in your Redux store).
 - `selector`: This is a function that takes your Redux state and returns the slice of state you are returning from your hook. If the selector returns `null`, then your `getDataStart` action will be dispatched.
+- `options`: This is a configuration object that allows cache settings to be configured.
 
 ## How it works
 
 - You provide an action creator (`getDataStart`)
 - You provide a selector (`selector`)
+- You provide an optional cache config (`options`)
 
-If your selector returns data, then your action creator is not called and the hook will simply return that data from state.
+If you **have not** provided a cache config:
 
-If your selector returns `null`, then the action your action creator returns will be dispatched. It is up to you to provide the logic in your selectors to know when to return null.
+- If your selector returns `null`, then the action your action creator returns will be dispatched. It is up to you to provide the logic in your selectors to know when to return null.
+- If your selector returns data, then your action creator is not called and the hook will simply return that data from state.
 
-This is an explicit design decision that was made when designing this hook to avoid forcing people to shape their state around this hook (i.e. we could have forced people to have a flag on each slice of state to indicate if something had loaded from an API or not, but that was deemed too intrusive).
+If you **have** provided a cache config:
+
+- If your selector returns data and cache timeout **hasn't** been reached, then your action creator is not called and the hook will simply return data from state.
+- If your selector returns data and cache timeout **has** been reached, then the action your action creator returns will be dispatched.
 
 ## Usage
 
@@ -92,7 +98,7 @@ const SomeComponent = () => {
 
 There is the option to invalidate the cache, meaning next time the hook is called it will fetch the data again.
 
-By setting a timeTillCacheInvalidate time in ms, as follows:
+By setting a `timeTillCacheInvalidate` time (in ms), as follows:
 
 **In `SomeHighLevelComponent.tsx`**
 
@@ -128,8 +134,79 @@ const useThing = () =>
 export { useThing };
 ```
 
-This will any value set by the provider set.
-You can also not set any value at the provider level, and handle all invalidation times in the hooks, but you will still need the provider, just with no value.
+This will override any value set by the provider.
+You can also not set any value at the provider level, and handle all invalidation times in the hooks, but you will still need the provider, just with no value:
+
+**In `SomeHighLevelComponent.tsx`**
+
+```tsx
+import React from 'react';
+import { Provider } from 'react-redux';
+import { store } from './redux/store';
+
+const SomeComponent = () => {
+  <Provider store={store}>
+    <ReactUseFetchWithReduxProvider>
+      <App />
+    </ReactUseFetchWithReduxProvider>
+  </Provider>;
+};
+```
+
+**In `useThing.ts`**
+
+```typescript
+import { useFetchWithRedux } from 'react-use-fetch-with-redux';
+import { getThingStart } from './actions/ThingActions'; // getThingStart is an action creator.
+import { getThingSelector } from './selectors/ThingSelector'; // getThingSelector is a selector.
+
+const useThing = () =>
+  useFetchWithRedux(getThingStart, getThingSelector, {
+    timeTillCacheInvalidate: 1800000,
+  });
+
+export { useThing };
+```
+
+## Gotchas
+
+A lower cache timeout value will always take precedence. For example if we have:
+
+- `timeTillCacheInvalidate` at the Provider level is 10000 (10 seconds)
+- We call the hook with a `timeTillCacheInvalidate` of 5000 (5 seconds)
+
+Then the cache timeout will be 5 seconds for the individual instance of that hook. This is what that looks like in code:
+
+**In `SomeHighLevelComponent.tsx`**
+
+```tsx
+import React from 'react';
+import { Provider } from 'react-redux';
+import { store } from './redux/store';
+
+const SomeComponent = () => {
+  <Provider store={store}>
+    <ReactUseFetchWithReduxProvider timeTillCacheInvalidate={10000}>
+      <App />
+    </ReactUseFetchWithReduxProvider>
+  </Provider>;
+};
+```
+
+**In `useThing.ts`**
+
+```typescript
+import { useFetchWithRedux } from 'react-use-fetch-with-redux';
+import { getThingStart } from './actions/ThingActions'; // getThingStart is an action creator.
+import { getThingSelector } from './selectors/ThingSelector'; // getThingSelector is a selector.
+
+const useThing = () =>
+  useFetchWithRedux(getThingStart, getThingSelector, {
+    timeTillCacheInvalidate: 5000,
+  });
+
+export { useThing };
+```
 
 ## Testing
 
@@ -145,5 +222,4 @@ There are many things that could improve this hook, so keep your eyes peeled or 
 
 Possible features include:
 
-- More sophisticated cachine strategies
-- Ability to specify caching strategies
+- More sophisticated caching strategies
