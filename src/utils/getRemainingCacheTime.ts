@@ -12,11 +12,7 @@ const getRemainingCacheTime = (
 
   const timeRemaining = timeTillCacheInvalidate + cacheSet - Date.now();
 
-  if (timeRemaining < 0) {
-    return 0;
-  } else {
-    return timeRemaining;
-  }
+  return timeRemaining < 0 ? 0 : timeRemaining;
 };
 
 export default getRemainingCacheTime;
