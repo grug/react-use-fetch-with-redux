@@ -1,6 +1,6 @@
 # react-use-fetch-with-redux
 
-React hook to fetch/select data with simple caching
+React hook to fetch/select data with caching
 
 ## This hook is for you if you...
 
